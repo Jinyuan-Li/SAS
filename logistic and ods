@@ -1,0 +1,47 @@
+PROC IMPORT DATAFILE="D:\95-108DATA2.csv" OUT=data DBMS=csv REPLACE;
+GETNAMES=YES;run;               
+
+data datam; set data;                                                                                          
+if edu=98 then edu=.;
+if mar=98 then mar=.;
+if job=98 then job=.;
+if sex = 2;    
+run;                                                                                                                                                                 
+
+ods excel file="C:\Users\user\Desktop\SASoutput.xlsx" options(sheet_interval="none");
+/*ods trace on;*/
+
+%macro a;
+%do n=2 %to 5; 
+ods select GlobalTests ModelANOVA;
+proc logistic desc;
+class age6g(ref="1") edu(ref="2") mar(ref="1") job(ref="2");
+model bsrs1m(ref="0")=age6g edu mar job year bsrs&n.m age6g*bsrs&n.m;
+weight w;                                                                           
+run; 
+%end;%mend;%a;
+
+%macro a;
+%do n=2 %to 5; 
+ods select OddsRatios;
+proc logistic desc;
+class age6g(ref="1") edu(ref="2") mar(ref="1") job(ref="2");
+model bsrs1m(ref="0")=age6g edu mar job year bsrs&n.m;
+weight w;                                                                                                                                                                                                                                                       
+run; 
+
+proc sort; 
+by age6g;
+
+ods select OddsRatios;
+proc logistic desc;
+by age6g;
+class edu(ref="2") mar(ref="1") job(ref="2");
+model bsrs1m(ref="0")=edu mar job year bsrs&n.m;
+weight w;                                                                                                                                                                                                                                                       
+run; 
+%end;%mend;%a;
+
+ods excel close;
+run;
+/*ods trace off;*/
